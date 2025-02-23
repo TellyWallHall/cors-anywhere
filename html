@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Web Proxy</title>
+    <meta name="viewport" content="width=device-width">
+    <style>
+        html, body {
+            margin: 0;
+            height: 100%;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+        }
+        #controls {
+            margin-bottom: 20px;
+        }
+        #url {
+            width: 70%;
+            padding: 8px;
+            margin-right: 10px;
+        }
+        #go {
+            padding: 8px 20px;
+            cursor: pointer;
+        }
+        #content {
+            width: 100%;
+            min-height: 500px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <input type="url" id="url" placeholder="Enter URL (e.g. https://example.com)">
+        <button id="go">Load Page</button>
+    </div>
+    <div id="content"></div>
+
+    <script>
+        const cors_proxy = 'https://cors-anywhere.herokuapp.com/';
+        const contentDiv = document.getElementById('content');
+        const urlInput = document.getElementById('url');
+        const goButton = document.getElementById('go');
+
+        async function fetchUrl() {
+            const url = urlInput.value.trim();
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            contentDiv.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(cors_proxy + url);
+                const text = await response.text();
+                
+                // Display the response
+                contentDiv.textContent = text;
+
+                // Update browser history
+                window.history.pushState({}, '', '?url=' + encodeURIComponent(url));
+            } catch (error) {
+                contentDiv.textContent = 'Error fetching URL: ' + error.message;
+            }
+        }
+
+        // Event listeners
+        goButton.addEventListener('click', fetchUrl);
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                fetchUrl();
+            }
+        });
+
+        // Load URL from query parameter if present
+        window.addEventListener('load', () => {
+            const params = new URLSearchParams(window.location.search);
+            const urlParam = params.get('url');
+            if (urlParam) {
+                urlInput.value = urlParam;
+                fetchUrl();
+            }
+        });
+    </script>
+</body>
+</html>
